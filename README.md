@@ -61,8 +61,22 @@
 * suspend/resume ok
 * card reader missing
 * => Suspend #2:
-* suspend/resume ok (probably because I waited for warm reset cycle to fail)
+* suspend/resume ok
 * card reader missing
 * => Suspend #2:
+* suspend fails
+* card reader missing
+
+## Test 4
+
+* => Boot kernel without patches, cmdline == `usbcore.quirks=05ac:8406:m` (USB_QUIRK_DISCONNECT_SUSPEND)
+* card reader exists
+* => Suspend #1:
+* suspend/resume ok
+* card reader missing
+* => Suspend #2:
+* suspend/resume ok
+* card reader missing
+* => Suspend #3:
 * suspend fails
 * card reader missing
