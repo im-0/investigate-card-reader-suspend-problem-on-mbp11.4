@@ -380,7 +380,7 @@ static int get_hub_info(struct libusb_device *dev, struct hub_info *info)
                 strcat(info->location, s);
             }
 
-            info->ppps = 0;
+            info->ppps = 1;
             /* Logical Power Switching Mode */
             int lpsm = uhd->wHubCharacteristics[0] & HUB_CHAR_LPSM;
             /* Over-Current Protection Mode */
