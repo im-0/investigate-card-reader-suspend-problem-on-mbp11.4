@@ -94,3 +94,23 @@
 * => Suspend #3:
 * suspend fails
 * card reader missing
+
+## Test 6
+
+* => Boot kernel without patches/quirks:
+* card reader exists
+* => Suspend #1:
+* suspend/resume ok
+* card reader missing
+* => Turn off port using patched hubctl:
+* card reader missing
+* => Turn on port using patched hubctl:
+* card reader missing
+* => Rebind xhci_hcd
+* card reader missing
+* => Suspend #2:
+* suspend/resume ok
+* card reader missing
+* => Suspend #3:
+* suspend/resume ok
+* card reader missing
