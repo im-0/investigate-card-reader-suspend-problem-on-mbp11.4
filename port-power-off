@@ -1,0 +1,3 @@
+#!/bin/sh -xeu
+
+./uhubctl/uhubctl -a off -e -l 2 -p 4
