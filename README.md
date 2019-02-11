@@ -80,3 +80,17 @@
 * => Suspend #3:
 * suspend fails
 * card reader missing
+
+## Test 5
+
+* => Boot kernel without patches, cmdline == `xhci_hcd.quirks=0x80` (XHCI_RESET_ON_RESUME)
+* card reader exists
+* => Suspend #1:
+* suspend/resume ok
+* card reader missing
+* => Suspend #2:
+* suspend/resume ok
+* card reader missing
+* => Suspend #3:
+* suspend fails
+* card reader missing
