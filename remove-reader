@@ -1,0 +1,3 @@
+#!/bin/sh -xeu
+
+echo 1 >'/sys/devices/pci0000:00/0000:00:14.0/usb2/2-4/remove'
