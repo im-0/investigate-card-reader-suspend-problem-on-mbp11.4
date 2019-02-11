@@ -1,0 +1,8 @@
+#!/bin/sh -xeu
+
+sysctl -w kernel.printk=8
+
+echo module usbcore +p > /sys/kernel/debug/dynamic_debug/control
+echo module xhci_hcd +p > /sys/kernel/debug/dynamic_debug/control
+echo module xhci_pci +p > /sys/kernel/debug/dynamic_debug/control
+echo module usb_storage +p >/sys/kernel/debug/dynamic_debug/control

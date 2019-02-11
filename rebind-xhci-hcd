@@ -1,0 +1,6 @@
+#!/bin/sh -xeu
+
+cd /sys/bus/pci/drivers/xhci_hcd
+echo '0000:00:14.0' >unbind
+sleep 3
+echo '0000:00:14.0' >bind
