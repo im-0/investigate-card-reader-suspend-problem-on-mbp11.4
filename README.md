@@ -21,7 +21,7 @@ configuration (see `test-*` directories).
 
 Descriptions of individual tests, with results:
 
-## Test 0
+## Test 0 (FAIL)
 
 * **=> Boot kernel without patches/quirks:**
     * card reader exists
@@ -37,7 +37,7 @@ Descriptions of individual tests, with results:
     * *suspend fails*
     * *card reader missing*
 
-## Test 1
+## Test 1 (FAIL)
 
 * **=> Boot kernel without patches/quirks:**
     * card reader exists
@@ -59,7 +59,7 @@ Descriptions of individual tests, with results:
     * *suspend fails*
     * *card reader missing*
 
-## Test 2
+## Test 2 (FAIL)
 
 * **=> Boot kernel without patches/quirks:**
     * card reader exists
@@ -79,7 +79,7 @@ Descriptions of individual tests, with results:
 Removing device using `/sys/devices/*/*/usb*/*-*/remove` unbreaks the
 suspend, but not fixes card reader itself.
 
-## Test 3
+## Test 3 (FAIL)
 
 * **=> Boot kernel without patches, cmdline ==
 `usbcore.quirks=05ac:8406:b` (USB_QUIRK_RESET_RESUME)**
@@ -94,7 +94,7 @@ suspend, but not fixes card reader itself.
     * *suspend fails*
     * *card reader missing*
 
-## Test 4
+## Test 4 (FAIL)
 
 * **=> Boot kernel without patches, cmdline ==
 `usbcore.quirks=05ac:8406:m` (USB_QUIRK_DISCONNECT_SUSPEND)**
@@ -109,7 +109,7 @@ suspend, but not fixes card reader itself.
     * *suspend fails*
     * *card reader missing*
 
-## Test 5
+## Test 5 (FAIL)
 
 * **=> Boot kernel without patches, cmdline == `xhci_hcd.quirks=0x80`
 (XHCI_RESET_ON_RESUME)**
@@ -124,7 +124,7 @@ suspend, but not fixes card reader itself.
     * *suspend fails*
     * *card reader missing*
 
-## Test 6
+## Test 6 (FAIL)
 
 * **=> Boot kernel without patches/quirks:**
     * card reader exists
@@ -144,7 +144,7 @@ suspend, but not fixes card reader itself.
     * suspend/resume ok
     * *card reader missing*
 
-## Test 7
+## Test 7 (SUCCESS)
 
 * **=> Boot kernel without patches/quirks:**
     * card reader exists
@@ -185,7 +185,7 @@ working.
 (WiFi broke during the last suspend/resume cycle, this is a different
 story, and it is fixable by reloading module brcmfmac)
 
-## Test 8
+## Test 8 (SUCCESS)
 
 * **=> Boot kernel without patches, cmdline == `xhci_hcd.quirks=0x80`
 (XHCI_RESET_ON_RESUME)**
@@ -216,7 +216,7 @@ interaction.
 
 (again, unrelated WiFi problems after suspend/resume)
 
-## Test 9
+## Test 9 (FAIL)
 
 This repeats Test 2, but with USB 3.0 flash attached to one of the
 external ports:
@@ -256,7 +256,7 @@ external ports:
 Suspend/resume with device attached to external USB 3.0 port works as
 expected. It looks like only the internal port (or SD card reader device attached to it) is problematic.
 
-## Test 10
+## Test 10 (SUCCESS)
 
 Test kernel patch which turns off power on port before switching link state
 to U3. XHCI_RESET_ON_RESUME enables host controller reset on resume, so
@@ -279,7 +279,7 @@ USB_QUIRK_PWR_CYCLE_ON_SUSPEND):**
     * suspend/resume ok
     * card reader exists
 
-## Test 11
+## Test 11 (FAIL)
 
 Similar to Test 10, but port power is turned off **after** switching link
 state to U3.
@@ -298,7 +298,7 @@ USB_QUIRK_PWR_CYCLE_ON_SUSPEND):**
     * *suspend fails*
     * *card reader missing*
 
-## Test 12
+## Test 12 (FAIL)
 
 Similar to Test 10, but using only *usb_acpi_set_power_state* in
 *xhci_set_port_power*.
