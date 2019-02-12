@@ -255,3 +255,26 @@ external ports:
 
 Suspend/resume with device attached to external USB 3.0 port works as
 expected. It looks like only the internal port (or SD card reader device attached to it) is problematic.
+
+## Test 10
+
+Test kernel patch which turns off power on port before switching link state
+to U3. XHCI_RESET_ON_RESUME enables host controller reset on resume, so
+port is powered on automatically.
+
+* **=> Boot patched kernel, cmdline ==
+`xhci_hcd.quirks=0x80 usbcore.quirks=05ac:8406:p` (XHCI_RESET_ON_RESUME,
+USB_QUIRK_PWR_CYCLE_ON_SUSPEND):**
+    * card reader exists
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #2:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #3:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #4:**
+    * suspend/resume ok
+    * card reader exists

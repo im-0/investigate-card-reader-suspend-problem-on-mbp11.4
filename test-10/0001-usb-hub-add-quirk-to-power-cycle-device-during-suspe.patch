@@ -1,0 +1,66 @@
+From 235fb43a45075cbb6998cc88eb028d7d12f1a2ae Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Tue, 12 Feb 2019 08:13:46 +0500
+Subject: [PATCH] usb: hub: add quirk to power cycle device during
+ suspend/resume
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/hub.c     | 10 ++++++++++
+ drivers/usb/core/quirks.c  |  3 +++
+ include/linux/usb/quirks.h |  6 ++++++
+ 3 files changed, 19 insertions(+)
+
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 1d1e61e980f3..74defc6b1499 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -3230,6 +3230,16 @@ int usb_port_suspend(struct usb_device *udev, pm_message_t msg)
+ 			goto err_ltm;
+ 	}
+ 
++	if (!PMSG_IS_AUTO(msg) &&
++			(udev->quirks & USB_QUIRK_PWR_CYCLE_ON_SUSPEND)) {
++		status = usb_clear_port_feature(hub->hdev, port1,
++				USB_PORT_FEAT_POWER);
++		if (status)
++			dev_dbg(&port_dev->dev,
++					"can't power off, status %d\n",
++					status);
++	}
++
+ 	/* see 7.1.7.6 */
+ 	if (hub_is_superspeed(hub->hdev))
+ 		status = hub_set_port_link_state(hub, port1, USB_SS_PORT_LS_U3);
+diff --git a/drivers/usb/core/quirks.c b/drivers/usb/core/quirks.c
+index 8bc35d53408b..8b2187a6ab27 100644
+--- a/drivers/usb/core/quirks.c
++++ b/drivers/usb/core/quirks.c
+@@ -131,6 +131,9 @@ static int quirks_param_set(const char *val, const struct kernel_param *kp)
+ 			case 'o':
+ 				flags |= USB_QUIRK_HUB_SLOW_RESET;
+ 				break;
++			case 'p':
++				flags |= USB_QUIRK_PWR_CYCLE_ON_SUSPEND;
++				break;
+ 			/* Ignore unrecognized flag characters */
+ 			}
+ 		}
+diff --git a/include/linux/usb/quirks.h b/include/linux/usb/quirks.h
+index a1be64c9940f..8149a6256951 100644
+--- a/include/linux/usb/quirks.h
++++ b/include/linux/usb/quirks.h
+@@ -69,4 +69,10 @@
+ /* Hub needs extra delay after resetting its port. */
+ #define USB_QUIRK_HUB_SLOW_RESET		BIT(14)
+ 
++/*
++ * Turn off device's port before suspend and then turn it on after
++ * resume.
++ */
++#define USB_QUIRK_PWR_CYCLE_ON_SUSPEND		BIT(15)
++
+ #endif /* __LINUX_USB_QUIRKS_H */
+-- 
+2.20.1
+
