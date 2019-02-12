@@ -278,3 +278,22 @@ USB_QUIRK_PWR_CYCLE_ON_SUSPEND):**
 * **=> Suspend #4:**
     * suspend/resume ok
     * card reader exists
+
+## Test 11
+
+Similar to Test 10, but port power is turned off **after** switching link
+state to U3.
+
+* **=> Boot patched kernel, cmdline ==
+`xhci_hcd.quirks=0x80 usbcore.quirks=05ac:8406:p` (XHCI_RESET_ON_RESUME,
+USB_QUIRK_PWR_CYCLE_ON_SUSPEND):**
+    * card reader exists
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> Suspend #2:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> Suspend #3:**
+    * *suspend fails*
+    * *card reader missing*
