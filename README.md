@@ -7,6 +7,7 @@ subsequent tries to suspend are failing.
 
 Links:
 
+* https://bugzilla.kernel.org/show_bug.cgi?id=111201
 * https://bugzilla.kernel.org/show_bug.cgi?id=202509
 * https://www.spinics.net/lists/linux-usb/msg164261.html
 
