@@ -1,0 +1,42 @@
+From 18a8f39bcdb087561c5acd259099bdcc076ba5a9 Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Tue, 12 Feb 2019 08:52:53 +0500
+Subject: [PATCH] Use only ACPI
+
+---
+ drivers/usb/host/xhci-hub.c | 17 -----------------
+ 1 file changed, 17 deletions(-)
+
+diff --git a/drivers/usb/host/xhci-hub.c b/drivers/usb/host/xhci-hub.c
+index e2eece693655..4afb86b10b14 100644
+--- a/drivers/usb/host/xhci-hub.c
++++ b/drivers/usb/host/xhci-hub.c
+@@ -558,25 +558,8 @@ struct xhci_hub *xhci_get_rhub(struct usb_hcd *hcd)
+ static void xhci_set_port_power(struct xhci_hcd *xhci, struct usb_hcd *hcd,
+ 				u16 index, bool on, unsigned long *flags)
+ {
+-	struct xhci_hub *rhub;
+-	struct xhci_port *port;
+ 	u32 temp;
+ 
+-	rhub = xhci_get_rhub(hcd);
+-	port = rhub->ports[index];
+-	temp = readl(port->addr);
+-	temp = xhci_port_state_to_neutral(temp);
+-	if (on) {
+-		/* Power on */
+-		writel(temp | PORT_POWER, port->addr);
+-		temp = readl(port->addr);
+-		xhci_dbg(xhci, "set port power, actual port %d status  = 0x%x\n",
+-						index, temp);
+-	} else {
+-		/* Power off */
+-		writel(temp & ~PORT_POWER, port->addr);
+-	}
+-
+ 	spin_unlock_irqrestore(&xhci->lock, *flags);
+ 	temp = usb_acpi_power_manageable(hcd->self.root_hub,
+ 					index);
+-- 
+2.20.1
+

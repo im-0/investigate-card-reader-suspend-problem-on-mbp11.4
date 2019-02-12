@@ -297,3 +297,22 @@ USB_QUIRK_PWR_CYCLE_ON_SUSPEND):**
 * **=> Suspend #3:**
     * *suspend fails*
     * *card reader missing*
+
+## Test 12
+
+Similar to Test 10, but using only *usb_acpi_set_power_state* in
+*xhci_set_port_power*.
+
+* **=> Boot patched kernel, cmdline ==
+`xhci_hcd.quirks=0x80 usbcore.quirks=05ac:8406:p` (XHCI_RESET_ON_RESUME,
+USB_QUIRK_PWR_CYCLE_ON_SUSPEND):**
+    * card reader exists
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> Suspend #2:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> Suspend #3:**
+    * *suspend fails*
+    * *card reader missing*
