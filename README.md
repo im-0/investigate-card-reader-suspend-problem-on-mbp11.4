@@ -182,3 +182,41 @@ This is the first test where both suspend/resume and SD card reader are working.
 Everything is the same as in Test 7, but reuires less manual interaction.
 
 (again, unrelated WiFi problems after suspend/resume)
+
+## Test 9
+
+This repeats Test 2, but with USB 3.0 flash attached to one of the external ports:
+
+	Bus 002 Device 003: ID 05ac:8406 Apple, Inc.
+	Bus 002 Device 002: ID 1b1c:1a15 Corsair Voyager Slider Flash Drive
+	Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+	/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/6p, 5000M
+	    |__ Port 2: Dev 2, If 0, Class=Mass Storage, Driver=usb-storage, 5000M
+	    |__ Port 4: Dev 3, If 0, Class=Mass Storage, Driver=usb-storage, 5000M
+
+* => Boot kernel without patches/quirks:
+* card reader exists
+* usb flash exists
+* => Remove card reader device:
+* remove ok
+* card reader missing
+* usb flash exists
+* => Suspend #1:
+* suspend/resume ok
+* card reader missing
+* usb flash exists
+* => Suspend #2:
+* suspend/resume ok
+* card reader missing
+* usb flash exists
+* => Suspend #3:
+* suspend/resume ok
+* card reader missing
+* usb flash exists
+* => Suspend #4:
+* suspend/resume ok
+* card reader missing
+* usb flash exists
+
+Suspend/resume with device attached to external USB 3.0 port works as expected. It looks like only the internal port (or SD card reader device attached to it) is problematic.
