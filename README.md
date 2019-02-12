@@ -76,6 +76,9 @@ Descriptions of individual tests, with results:
     * suspend/resume ok
     * *card reader missing*
 
+Removing device using `/sys/devices/*/*/usb*/*-*/remove` unbreaks the
+suspend, but not fixes card reader itself.
+
 ## Test 3
 
 * **=> Boot kernel without patches, cmdline ==
