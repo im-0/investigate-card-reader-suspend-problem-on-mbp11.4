@@ -354,3 +354,33 @@ Same as Test 13, but without XHCI_RESET_ON_RESUME.
 * **=> Suspend #2:**
     * suspend/resume ok
     * *card reader missing*
+
+## Test 15 (SUCCESS)
+
+Test new patch that should disable link before resume, re-enable link
+after resume and reset the device.
+
+* **=> Boot patched kernel, cmdline ==
+`usbcore.quirks=05ac:8406:p` (USB_QUIRK_DISABLE_LINK_ON_SUSPEND):**
+    * card reader exists
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #2:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #3:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #4:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #5:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #6:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #7:**
+    * suspend/resume ok
+    * card reader exists

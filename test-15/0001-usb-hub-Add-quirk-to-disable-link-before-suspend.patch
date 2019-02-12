@@ -1,0 +1,219 @@
+From 81dc97ff59d977e92c1fd978dedd1d4a5488215d Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Tue, 12 Feb 2019 15:43:42 +0500
+Subject: [PATCH] usb: hub: Add quirk to disable link before suspend
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/driver.c  |  6 +++
+ drivers/usb/core/hub.c     | 84 ++++++++++++++++++++++++++++++++++++--
+ drivers/usb/core/quirks.c  |  3 ++
+ include/linux/usb.h        |  3 ++
+ include/linux/usb/quirks.h |  9 ++++
+ 5 files changed, 101 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
+index 53564386ed57..1a1ee1ba7a63 100644
+--- a/drivers/usb/core/driver.c
++++ b/drivers/usb/core/driver.c
+@@ -1145,6 +1145,10 @@ static int usb_suspend_device(struct usb_device *udev, pm_message_t msg)
+ 			udev->state == USB_STATE_SUSPENDED)
+ 		goto done;
+ 
++	if (!PMSG_IS_AUTO(msg) &&
++			(udev->quirks & USB_QUIRK_DISABLE_LINK_ON_SUSPEND))
++		udev->disable_link_on_suspend = 1;
++
+ 	/* For devices that don't have a driver, we do a generic suspend. */
+ 	if (udev->dev.driver)
+ 		udriver = to_usb_device_driver(udev->dev.driver);
+@@ -1188,6 +1192,8 @@ static int usb_resume_device(struct usb_device *udev, pm_message_t msg)
+ 
+  done:
+ 	dev_vdbg(&udev->dev, "%s: status %d\n", __func__, status);
++	if (!status)
++		udev->disable_link_on_suspend = 0;
+ 	return status;
+ }
+ 
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 1d1e61e980f3..c2e4e23500d3 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -3230,8 +3230,22 @@ int usb_port_suspend(struct usb_device *udev, pm_message_t msg)
+ 			goto err_ltm;
+ 	}
+ 
++	if (udev->disable_link_on_suspend && !hub_is_superspeed(hub->hdev)) {
++		dev_dbg(&udev->dev,
++				"disabling link unsupported on <USB 3.0\n");
++		udev->disable_link_on_suspend = 0;
++	}
++
++	if (udev->disable_link_on_suspend) {
++		status = hub_set_port_link_state(hub, port1,
++				USB_SS_PORT_LS_SS_DISABLED);
++		if (status) {
++			dev_dbg(&port_dev->dev, "can't disable link\n");
++			udev->disable_link_on_suspend = 0;
++		}
++	}
+ 	/* see 7.1.7.6 */
+-	if (hub_is_superspeed(hub->hdev))
++	else if (hub_is_superspeed(hub->hdev))
+ 		status = hub_set_port_link_state(hub, port1, USB_SS_PORT_LS_U3);
+ 
+ 	/*
+@@ -3431,6 +3445,32 @@ static int wait_for_connected(struct usb_device *udev,
+ 	return status;
+ }
+ 
++static int wait_for_link(struct usb_device *udev,
++		struct usb_hub *hub, int port1,
++		u16 *portchange, u16 *portstatus)
++{
++	int status = 0, delay_ms = 0;
++
++	while (delay_ms < 2000) {
++		status = hub_port_status(hub, port1, portstatus, portchange);
++
++		if (status || ((*portstatus & USB_PORT_STAT_LINK_STATE) ==
++					USB_SS_PORT_LS_POLLING) ||
++				(*portstatus & USB_PORT_STAT_CONNECTION))
++			break;
++
++		msleep(20);
++		delay_ms += 20;
++	}
++	dev_dbg(&udev->dev, "waited %dms for link, status %d\n", delay_ms,
++			status);
++
++	if (delay_ms >= 2000)
++		status = -ENODEV;
++
++	return status;
++}
++
+ /*
+  * usb_port_resume - re-activate a suspended usb device's upstream port
+  * @udev: device to re-activate, not a root hub
+@@ -3484,8 +3524,43 @@ int usb_port_resume(struct usb_device *udev, pm_message_t msg)
+ 
+ 	usb_lock_port(port_dev);
+ 
+-	/* Skip the initial Clear-Suspend step for a remote wakeup */
+ 	status = hub_port_status(hub, port1, &portstatus, &portchange);
++	if (status)
++		dev_dbg(&udev->dev,
++				"port status: first read failed, status %d\n",
++				status);
++
++	if (status == 0 && udev->disable_link_on_suspend) {
++		if ((portstatus & USB_PORT_STAT_LINK_STATE) ==
++				USB_SS_PORT_LS_SS_DISABLED) {
++			status = hub_set_port_link_state(hub, port1,
++					USB_SS_PORT_LS_RX_DETECT);
++			if (status) {
++				dev_dbg(&port_dev->dev, "can't enable link\n");
++				goto SuspendCleared;
++			}
++
++			status = wait_for_link(udev, hub, port1, &portchange,
++					&portstatus);
++			if (status) {
++				dev_dbg(&port_dev->dev,
++						"wait for link failed\n");
++				goto SuspendCleared;
++			}
++			if (portstatus & USB_PORT_STAT_CONNECTION) {
++				dev_dbg(&port_dev->dev,
++						"connected after enabling link\n");
++				udev->disable_link_on_suspend = 0;
++			}
++
++			set_bit(port1, hub->warm_reset_bits);
++		} else {
++			dev_dbg(&port_dev->dev, "link is not disabled\n");
++			udev->disable_link_on_suspend = 0;
++		}
++	}
++
++	/* Skip the initial Clear-Suspend step for a remote wakeup */
+ 	if (status == 0 && !port_is_suspended(hub, portstatus)) {
+ 		if (portchange & USB_PORT_STAT_C_SUSPEND)
+ 			pm_wakeup_event(&udev->dev, 0);
+@@ -3530,7 +3605,7 @@ int usb_port_resume(struct usb_device *udev, pm_message_t msg)
+ 		}
+ 	}
+ 
+-	if (udev->persist_enabled)
++	if (udev->persist_enabled && !udev->disable_link_on_suspend)
+ 		status = wait_for_connected(udev, hub, &port1, &portchange,
+ 				&portstatus);
+ 
+@@ -4069,7 +4144,8 @@ static int usb_disable_link_state(struct usb_hcd *hcd, struct usb_device *udev,
+ 	if (usb_set_lpm_timeout(udev, state, 0))
+ 		return -EBUSY;
+ 
+-	usb_set_device_initiated_lpm(udev, state, false);
++	if (!udev->disable_link_on_suspend)
++		usb_set_device_initiated_lpm(udev, state, false);
+ 
+ 	if (hcd->driver->disable_usb3_lpm_timeout(hcd, udev, state))
+ 		dev_warn(&udev->dev, "Could not disable xHCI %s timeout, "
+diff --git a/drivers/usb/core/quirks.c b/drivers/usb/core/quirks.c
+index 8bc35d53408b..c26ba784dc54 100644
+--- a/drivers/usb/core/quirks.c
++++ b/drivers/usb/core/quirks.c
+@@ -131,6 +131,9 @@ static int quirks_param_set(const char *val, const struct kernel_param *kp)
+ 			case 'o':
+ 				flags |= USB_QUIRK_HUB_SLOW_RESET;
+ 				break;
++			case 'p':
++				flags |= USB_QUIRK_DISABLE_LINK_ON_SUSPEND;
++				break;
+ 			/* Ignore unrecognized flag characters */
+ 			}
+ 		}
+diff --git a/include/linux/usb.h b/include/linux/usb.h
+index 5e49e82c4368..44dff19a7839 100644
+--- a/include/linux/usb.h
++++ b/include/linux/usb.h
+@@ -610,6 +610,8 @@ struct usb3_lpm_parameters {
+  * @do_remote_wakeup:  remote wakeup should be enabled
+  * @reset_resume: needs reset instead of resume
+  * @port_is_suspended: the upstream port is suspended (L2 or U3)
++ * @disable_link_on_suspend: link was disabled/should be disabled before
++ *	suspend
+  * @wusb_dev: if this is a Wireless USB device, link to the WUSB
+  *	specific data for the device.
+  * @slot_id: Slot ID assigned by xHCI
+@@ -699,6 +701,7 @@ struct usb_device {
+ 	unsigned do_remote_wakeup:1;
+ 	unsigned reset_resume:1;
+ 	unsigned port_is_suspended:1;
++	unsigned disable_link_on_suspend:1;
+ #endif
+ 	struct wusb_dev *wusb_dev;
+ 	int slot_id;
+diff --git a/include/linux/usb/quirks.h b/include/linux/usb/quirks.h
+index a1be64c9940f..d23f14145782 100644
+--- a/include/linux/usb/quirks.h
++++ b/include/linux/usb/quirks.h
+@@ -69,4 +69,13 @@
+ /* Hub needs extra delay after resetting its port. */
+ #define USB_QUIRK_HUB_SLOW_RESET		BIT(14)
+ 
++/*
++ * Disable link on device's port before system suspend and then
++ * enable it again after resume. This also enables device reset
++ * after resume.
++ *
++ * Has effect only on USB 3.0 devices connected to USB 3.0 ports.
++ */
++#define USB_QUIRK_DISABLE_LINK_ON_SUSPEND	BIT(15)
++
+ #endif /* __LINUX_USB_QUIRKS_H */
+-- 
+2.20.1
+
