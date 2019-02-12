@@ -1,0 +1,108 @@
+From 5625b1a1c956562479530875c10821395289cd55 Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Tue, 12 Feb 2019 08:13:46 +0500
+Subject: [PATCH] usb: hub: Add quirk to disable link before suspend
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/hub.c     | 47 +++++++++++++++++++++++++-------------
+ drivers/usb/core/quirks.c  |  3 +++
+ include/linux/usb/quirks.h |  6 +++++
+ 3 files changed, 40 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 1d1e61e980f3..760ef3b0d570 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -3230,28 +3230,43 @@ int usb_port_suspend(struct usb_device *udev, pm_message_t msg)
+ 			goto err_ltm;
+ 	}
+ 
+-	/* see 7.1.7.6 */
+-	if (hub_is_superspeed(hub->hdev))
+-		status = hub_set_port_link_state(hub, port1, USB_SS_PORT_LS_U3);
++	if (!PMSG_IS_AUTO(msg) &&
++			(udev->quirks & USB_QUIRK_DISABLE_DURING_SUSPEND)) {
++		if (hub_is_superspeed(hub->hdev))
++			status = hub_set_port_link_state(hub, port1,
++					USB_SS_PORT_LS_SS_DISABLED);
++		else
++			status = usb_clear_port_feature(hub->hdev, port1,
++					USB_PORT_FEAT_ENABLE);
+ 
+-	/*
+-	 * For system suspend, we do not need to enable the suspend feature
+-	 * on individual USB-2 ports.  The devices will automatically go
+-	 * into suspend a few ms after the root hub stops sending packets.
+-	 * The USB 2.0 spec calls this "global suspend".
+-	 *
+-	 * However, many USB hubs have a bug: They don't relay wakeup requests
+-	 * from a downstream port if the port's suspend feature isn't on.
+-	 * Therefore we will turn on the suspend feature if udev or any of its
+-	 * descendants is enabled for remote wakeup.
+-	 */
+-	else if (PMSG_IS_AUTO(msg) || wakeup_enabled_descendants(udev) > 0)
++		if (status)
++			dev_dbg(&port_dev->dev,
++					"can't disable link, status %d\n",
++					status);
++	} else if (hub_is_superspeed(hub->hdev)) {
++		/* see 7.1.7.6 */
++		status = hub_set_port_link_state(hub, port1, USB_SS_PORT_LS_U3);
++	} else if (PMSG_IS_AUTO(msg) || wakeup_enabled_descendants(udev) > 0) {
++		/*
++		 * For system suspend, we do not need to enable the suspend
++		 * feature on individual USB-2 ports.  The devices will
++		 * automatically go into suspend a few ms after the root hub
++		 * stops sending packets. The USB 2.0 spec calls this "global
++		 * suspend".
++		 *
++		 * However, many USB hubs have a bug: They don't relay wakeup
++		 * requests from a downstream port if the port's suspend
++		 * feature isn't on. Therefore we will turn on the suspend
++		 * feature if udev or any of its descendants is enabled for
++		 * remote wakeup.
++		 */
+ 		status = set_port_feature(hub->hdev, port1,
+ 				USB_PORT_FEAT_SUSPEND);
+-	else {
++	} else {
+ 		really_suspend = false;
+ 		status = 0;
+ 	}
++
+ 	if (status) {
+ 		dev_dbg(&port_dev->dev, "can't suspend, status %d\n", status);
+ 
+diff --git a/drivers/usb/core/quirks.c b/drivers/usb/core/quirks.c
+index 8bc35d53408b..697cc85e616f 100644
+--- a/drivers/usb/core/quirks.c
++++ b/drivers/usb/core/quirks.c
+@@ -131,6 +131,9 @@ static int quirks_param_set(const char *val, const struct kernel_param *kp)
+ 			case 'o':
+ 				flags |= USB_QUIRK_HUB_SLOW_RESET;
+ 				break;
++			case 'p':
++				flags |= USB_QUIRK_DISABLE_DURING_SUSPEND;
++				break;
+ 			/* Ignore unrecognized flag characters */
+ 			}
+ 		}
+diff --git a/include/linux/usb/quirks.h b/include/linux/usb/quirks.h
+index a1be64c9940f..78b33c0de0a2 100644
+--- a/include/linux/usb/quirks.h
++++ b/include/linux/usb/quirks.h
+@@ -69,4 +69,10 @@
+ /* Hub needs extra delay after resetting its port. */
+ #define USB_QUIRK_HUB_SLOW_RESET		BIT(14)
+ 
++/*
++ * Disable link on device's port before system suspend and then
++ * enable it again after resume.
++ */
++#define USB_QUIRK_DISABLE_DURING_SUSPEND	BIT(15)
++
+ #endif /* __LINUX_USB_QUIRKS_H */
+-- 
+2.20.1
+

@@ -318,7 +318,7 @@ USB_QUIRK_PWR_CYCLE_ON_SUSPEND):**
     * *suspend fails*
     * *card reader missing*
 
-## Test 13
+## Test 13 (SUCCESS)
 
 Test kernel patch which disables link on port instead of switching link state
 to U3. XHCI_RESET_ON_RESUME enables host controller reset on resume, so
@@ -340,3 +340,17 @@ USB_QUIRK_DISABLE_DURING_SUSPEND):**
 * **=> Suspend #4:**
     * suspend/resume ok
     * card reader exists
+
+## Test 14 (FAIL)
+
+Same as Test 13, but without XHCI_RESET_ON_RESUME.
+
+* **=> Boot patched kernel, cmdline ==
+`usbcore.quirks=05ac:8406:p` (USB_QUIRK_DISABLE_DURING_SUSPEND):**
+    * card reader exists
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> Suspend #2:**
+    * suspend/resume ok
+    * *card reader missing*
