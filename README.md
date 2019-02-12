@@ -1,3 +1,26 @@
+# Problem
+
+There is a known problem with suspend and resume on MacBook Pro Retina
+mid-2015 (`MacBookPro11,4`) under Linux: internal SD Card Reader (USB,
+05ac:8406) disappears after first suspend/resume cycle, and then all
+subsequent tries to suspend are failing.
+
+Links:
+
+* https://bugzilla.kernel.org/show_bug.cgi?id=202509
+* https://www.spinics.net/lists/linux-usb/msg164261.html
+
+This repository contains:
+
+* [various information about my MacBook, where this problem
+appears](hwinfo);
+* [patched uhubctl](uhubctl) (patch disables check for power switching
+support);
+* kernel logs of various manually performed tests, with kernel
+configuration (see `test-*` directories).
+
+Descriptions of individual tests, with results:
+
 ## Test 0
 
 * => Boot kernel without patches/quirks:
