@@ -398,3 +398,19 @@ patches applied. Unfortunately, debug logging was disabled.
 Trying to reproduce what happended in Test 16, but with debug enabled.
 Suspend length seems does not matter. This time everything worked as
 expected.
+
+## Test 18 (FAIL)
+
+Trying patch from Mathias Nyman:
+https://marc.info/?l=linux-usb&m=155015657209860&w=2
+
+* **=> Boot patched kernel without quirks:**
+    * card reader exists
+
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * *card reader missing*
+
+* **=> Suspend #2:**
+    * *suspend fails*
+    * *card reader missing*
