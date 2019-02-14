@@ -392,3 +392,9 @@ This happened during normal use of laptop.
 It looks like with my patches system survives only short suspend but not
 the long one. This happened on latest kernel from Fedora 29 with
 patches applied. Unfortunately, debug logging was disabled.
+
+## Test 17 (SUCCESS)
+
+Trying to reproduce what happended in Test 16, but with debug enabled.
+Suspend length seems does not matter. This time everything worked as
+expected.
