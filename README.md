@@ -384,3 +384,11 @@ after resume and reset the device.
 * **=> Suspend #7:**
     * suspend/resume ok
     * card reader exists
+
+## Test 16 (FAIL)
+
+This happened during normal use of laptop.
+
+It looks like with my patches system survives only short suspend but not
+the long one. This happened on latest kernel from Fedora 29 with
+patches applied. Unfortunately, debug logging was disabled.
