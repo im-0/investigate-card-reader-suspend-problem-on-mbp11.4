@@ -414,3 +414,114 @@ https://marc.info/?l=linux-usb&m=155015657209860&w=2
 * **=> Suspend #2:**
     * *suspend fails*
     * *card reader missing*
+
+# Test 19 (FAIL)
+
+Trying to reproduce what happended in Test 16, but with debug enabled.
+Problem appeared again, with debug enabled. Kernel log is huge (~5G).
+
+Potentially interesting lines:
+
+```
+...
+[60683.714182] PM: suspend devices took 0.934 seconds
+[60686.645612] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[60686.752372] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[60686.752378] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[60686.970893] PM: resume devices took 0.326 seconds
+[89295.118057] PM: suspend devices took 0.891 seconds
+[89297.993768] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[89298.100722] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[89298.100726] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[89298.669905] PM: resume devices took 0.677 seconds
+[89341.471200] PM: suspend devices took 0.935 seconds
+[89344.397226] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[89344.503937] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[89344.503941] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[89345.073397] PM: resume devices took 0.677 seconds
+[89478.005991] PM: suspend devices took 0.930 seconds
+[89480.938092] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[89481.045154] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[89481.045159] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[89482.948524] PM: resume devices took 2.011 seconds
+[90527.837722] PM: suspend devices took 0.884 seconds
+[90530.759223] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[90530.866108] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[90530.866115] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[90531.435176] PM: resume devices took 0.677 seconds
+[114123.965070] PM: suspend devices took 0.929 seconds
+[114126.880362] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[114126.987251] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[114126.987256] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[114127.205603] PM: resume devices took 0.326 seconds
+[129910.663807] PM: suspend devices took 0.932 seconds
+[129913.557532] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[129913.664178] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[129913.664184] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[129914.565688] PM: resume devices took 1.009 seconds
+[143995.901665] PM: suspend devices took 0.931 seconds
+[143998.799691] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[143998.906982] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[143998.906986] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[143999.124351] PM: resume devices took 0.325 seconds
+[152414.724917] PM: suspend devices took 0.935 seconds
+[152417.618568] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[152417.725533] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[152417.725538] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[152418.294834] PM: resume devices took 0.677 seconds
+[175739.696508] PM: suspend devices took 0.931 seconds
+[175742.648687] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[175742.755327] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[175742.755332] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[175742.973617] PM: resume devices took 0.326 seconds
+[199327.543423] PM: suspend devices took 0.914 seconds
+[199330.456007] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[199330.562787] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[199330.562794] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[199330.781033] PM: resume devices took 0.326 seconds
+[231745.097397] PM: suspend devices took 1.015 seconds
+[231747.999063] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[231748.105697] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[231748.105703] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[231748.323231] PM: resume devices took 0.325 seconds
+[232140.437522] PM: suspend devices took 0.929 seconds
+[232143.371131] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[232143.477828] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[232143.477833] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[232143.696145] PM: resume devices took 0.326 seconds
+[250619.048326] PM: suspend devices took 0.929 seconds
+[250621.984990] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[250622.091757] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[250622.091763] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[250622.309781] PM: resume devices took 0.326 seconds
+[301626.024791] PM: suspend devices took 0.932 seconds
+>>> last successful resume (card reader is working):
+[301628.927560] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[301629.034327] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x280
+[301629.034334] xhci_hcd 0000:00:14.0: Get port status returned 0x280
+[301629.251752] PM: resume devices took 0.325 seconds
+>>> last successful suspend:
+[351671.877535] PM: suspend devices took 0.932 seconds
+>>> LS_U3 instead of LS_SS_DISABLED after resume?:
+[351674.740952] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x1263
+[351674.740955] xhci_hcd 0000:00:14.0: Get port status returned 0x263
+[351674.741044] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x1263
+[351674.741045] xhci_hcd 0000:00:14.0: Get port status returned 0x263
+[351674.805034] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x1263
+[351674.805038] xhci_hcd 0000:00:14.0: Get port status returned 0x263
+[351674.840496] PM: resume devices took 0.100 seconds
+[351674.841313] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x1263
+[351674.841321] xhci_hcd 0000:00:14.0: Get port status returned 0x263
+[351674.841366] usb 2-4: USB disconnect, device number 5
+[351674.841373] usb 2-4: unregistering device
+[351674.841381] usb 2-4: unregistering interface 2-4:1.0
+[351674.841550] usb 2-4: usb_disable_device nuking all URBs
+>>> trying to reset:
+[351674.849603] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x202e0
+[351674.849606] xhci_hcd 0000:00:14.0: Get port status returned 0x102e0
+[351674.849627] xhci_hcd 0000:00:14.0: set port reset, actual port 3 status  = 0x202f0
+[351674.910992] usb usb2-port4: not reset yet, waiting 60ms
+>>> first failing suspend:
+[403139.301047] PM: Some devices failed to suspend, or early wake event detected
+...
+```
