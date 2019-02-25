@@ -581,3 +581,37 @@ https://www.spinics.net/lists/linux-usb/msg177378.html
 * **=> Suspend #3:**
     * *suspend fails (wakes up automatically with closed lid)*
     * *card reader missing*
+
+## Test 23 (FAIL)
+
+Same as Test 22, but trying to manually disable ACPI wakeup by
+XHCI.
+
+* **=> Boot patched kernel, without additional quirks:**
+    * card reader exists
+* **=> grep XHC1 /proc/acpi/wakeup**
+    * `XHC1	  S3	*enabled   pci:0000:00:14.0`
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> grep XHC1 /proc/acpi/wakeup**
+    * `XHC1	  S3	*enabled   pci:0000:00:14.0`
+* **=> echo XHC1 >/proc/acpi/wakeup**
+* **=> grep XHC1 /proc/acpi/wakeup**
+    * `XHC1	  S3	*disabled  pci:0000:00:14.0`
+* **=> Suspend #2:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> grep XHC1 /proc/acpi/wakeup**
+    * `XHC1	  S3	*disabled  pci:0000:00:14.0`
+* **=> Suspend #3:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> grep XHC1 /proc/acpi/wakeup**
+    * `XHC1	  S3	*disabled  pci:0000:00:14.0`
+* **=> Suspend #4:**
+    * suspend/resume ok
+    * *card reader missing*
+
+As expected, combination of patch and `echo XHC1 >/proc/acpi/wakeup`
+fixes suspend/resume. Card reader remains broken.
