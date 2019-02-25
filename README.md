@@ -564,3 +564,20 @@ state to U3 before disabling link completely.
     * card reader missing
 
 Obviously this does not work.
+
+## Test 22 (FAIL)
+
+Trying another patch from Mathias Nyman:
+https://www.spinics.net/lists/linux-usb/msg177378.html
+
+* **=> Boot patched kernel, without additional quirks:**
+    * card reader exists
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> Suspend #2:**
+    * suspend/resume ok
+    * *card reader missing*
+* **=> Suspend #3:**
+    * *suspend fails (wakes up automatically with closed lid)*
+    * *card reader missing*
