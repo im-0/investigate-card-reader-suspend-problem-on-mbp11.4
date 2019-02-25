@@ -1,0 +1,53 @@
+From eab484d866274d245d8ccabebfe64ff30bfcbf1d Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Mon, 25 Feb 2019 23:16:02 +0500
+Subject: [PATCH 4/4] usb: core: Try disabling link *after* switching to U3
+
+Just to test...
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/hub.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index a8f6f742b6d3..cab40957f7da 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -3285,16 +3285,8 @@ int usb_port_suspend(struct usb_device *udev, pm_message_t msg)
+ 		udev->disable_link_on_suspend = 0;
+ 	}
+ 
+-	if (udev->disable_link_on_suspend) {
+-		dev_dbg(&port_dev->dev, "disabling link...\n");
+-		status = hub_set_port_link_state(hub, port1,
+-				USB_SS_PORT_LS_SS_DISABLED);
+-		if (status)
+-			dev_dbg(&port_dev->dev, "can't disable link\n");
+-		status = wait_for_ls_ss_disabled(status, udev, hub, port1);
+-	}
+ 	/* see 7.1.7.6 */
+-	else if (hub_is_superspeed(hub->hdev))
++	if (hub_is_superspeed(hub->hdev))
+ 		status = hub_set_port_link_state(hub, port1, USB_SS_PORT_LS_U3);
+ 	/*
+ 	 * For system suspend, we do not need to enable the suspend feature
+@@ -3315,6 +3307,15 @@ int usb_port_suspend(struct usb_device *udev, pm_message_t msg)
+ 		status = 0;
+ 	}
+ 
++	if (status == 0 && udev->disable_link_on_suspend) {
++		dev_dbg(&port_dev->dev, "disabling link...\n");
++		status = hub_set_port_link_state(hub, port1,
++				USB_SS_PORT_LS_SS_DISABLED);
++		if (status)
++			dev_dbg(&port_dev->dev, "can't disable link\n");
++		status = wait_for_ls_ss_disabled(status, udev, hub, port1);
++	}
++
+ 	if (status) {
+ 		dev_dbg(&port_dev->dev, "can't suspend, status %d\n", status);
+ 
+-- 
+2.20.1
+

@@ -1,0 +1,93 @@
+From 93fad8d29b5dbf6e111e737cd3d2b5e5cae1acbe Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Mon, 25 Feb 2019 15:48:18 +0500
+Subject: [PATCH 1/4] usb: core: Add function to wait for specific port state
+
+wait_for_status() is a more generic version of wait_for_connected().
+For now the only user is wait_for_connected(), more users will be added
+in subsequent patches.
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/hub.c | 51 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 37 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 1d1e61e980f3..b7d4f4a79335 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -3144,6 +3144,30 @@ static unsigned wakeup_enabled_descendants(struct usb_device *udev)
+ 			(hub ? hub->wakeup_enabled_descendants : 0);
+ }
+ 
++typedef bool (is_port_status_ready)(u16 portstatus);
++
++static int wait_for_status(int status, struct usb_device *udev,
++		struct usb_hub *hub, int port1,
++		u16 *portchange, u16 *portstatus,
++		int max_delay_ms, int sleep_ms, int *delay_ms,
++		is_port_status_ready *is_ready)
++{
++	*delay_ms = 0;
++	while (*delay_ms < max_delay_ms) {
++		if (status || is_ready(*portstatus))
++			break;
++		if (!port_is_power_on(hub, *portstatus)) {
++			status = -ENODEV;
++			break;
++		}
++		msleep(sleep_ms);
++		*delay_ms += sleep_ms;
++		status = hub_port_status(hub, port1, portstatus, portchange);
++	}
++
++	return status;
++}
++
+ /*
+  * usb_port_suspend - suspend a usb device's upstream port
+  * @udev: device that's no longer in active use, not a root hub
+@@ -3386,6 +3410,11 @@ static int finish_port_resume(struct usb_device *udev)
+ 	return status;
+ }
+ 
++static bool is_port_connected(u16 portstatus)
++{
++	return portstatus & USB_PORT_STAT_CONNECTION;
++}
++
+ /*
+  * There are some SS USB devices which take longer time for link training.
+  * XHCI specs 4.19.4 says that when Link training is successful, port
+@@ -3414,20 +3443,14 @@ static int wait_for_connected(struct usb_device *udev,
+ 		struct usb_hub *hub, int *port1,
+ 		u16 *portchange, u16 *portstatus)
+ {
+-	int status = 0, delay_ms = 0;
+-
+-	while (delay_ms < 2000) {
+-		if (status || *portstatus & USB_PORT_STAT_CONNECTION)
+-			break;
+-		if (!port_is_power_on(hub, *portstatus)) {
+-			status = -ENODEV;
+-			break;
+-		}
+-		msleep(20);
+-		delay_ms += 20;
+-		status = hub_port_status(hub, *port1, portstatus, portchange);
+-	}
+-	dev_dbg(&udev->dev, "Waited %dms for CONNECT\n", delay_ms);
++	int delay_ms;
++	int status = wait_for_status(0, udev,
++			hub, *port1,
++			portchange, portstatus,
++			2000, 20, &delay_ms,
++			is_port_connected);
++	dev_dbg(&udev->dev, "Waited %dms for CONNECT, status == %d\n",
++			delay_ms, status);
+ 	return status;
+ }
+ 
+-- 
+2.20.1
+

@@ -550,3 +550,16 @@ Test new patch with slightly changed logic (waiting loops added).
 * **=> Suspend #6:**
     * suspend/resume ok
     * card reader exists
+
+## Test 21 (FAIL)
+
+Same as in Test 20, but with additional patch which changes link
+state to U3 before disabling link completely.
+
+* **=> Boot patched kernel, without additional quirks:**
+    * card reader exists
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * card reader missing
+
+Obviously this does not work.
