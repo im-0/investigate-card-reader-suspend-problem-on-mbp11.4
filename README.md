@@ -525,3 +525,28 @@ Potentially interesting lines:
 [403139.301047] PM: Some devices failed to suspend, or early wake event detected
 ...
 ```
+
+## Test 20 (SUCCESS)
+
+Test new patch with slightly changed logic (waiting loops added).
+
+* **=> Boot patched kernel, without additional quirks:**
+    * card reader exists
+* **=> Suspend #1:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #2:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #3:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #4:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #5:**
+    * suspend/resume ok
+    * card reader exists
+* **=> Suspend #6:**
+    * suspend/resume ok
+    * card reader exists
