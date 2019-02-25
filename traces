@@ -1,0 +1,3 @@
+#!/bin/sh -xeu
+
+tee trace </sys/kernel/debug/tracing/trace_pipe
