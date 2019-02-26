@@ -641,3 +641,29 @@ from the beginning. And everything works fine with USB 3.0 flash drive.
 
 It looks like Apple's card reader just breaks after changing the link
 state to U3.
+
+## Test 25 (FAIL)
+
+Same as Test 24, but without hub autosuspend.
+
+* **=> Boot kernel, without any patches or quirks:**
+    * card reader exists
+* **=> cat /sys/bus/usb/devices/2-4/power/runtime_suspended_time**
+    * `0`
+* **=> cat /sys/bus/usb/devices/2-4/power/control**
+    * `on`
+* **=> cat /sys/bus/usb/devices/usb2/power/runtime_suspended_time**
+    * `0`
+* **=> cat /sys/bus/usb/devices/usb2/power/control**
+    * `auto`
+* **=> echo on >/sys/bus/usb/devices/usb2/power/control**
+* **=> rmmod uas usb-storage**
+* **=> echo auto >/sys/bus/usb/devices/2-4/power/control**
+* **=> Wait few seconds...**
+* **=> cat /sys/bus/usb/devices/2-4/power/runtime_suspended_time**
+    * some non-zero value
+* **=> cat /sys/bus/usb/devices/usb2/power/runtime_suspended_time**
+    * `0` (hub is not suspended)
+    * card reader still exists in `lsusb` output
+* **=> echo on >/sys/bus/usb/devices/2-4/power/control**
+    * *card reader missing*
