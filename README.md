@@ -615,3 +615,23 @@ XHCI.
 
 As expected, combination of patch and `echo XHC1 >/proc/acpi/wakeup`
 fixes suspend/resume. Card reader remains broken.
+
+## Test 24 (FAIL)
+
+Trying to reproduce the card reader problem without full system
+suspend.
+
+* **=> Boot kernel, without any patches or quirks:**
+    * card reader exists
+* **=> cat /sys/bus/usb/devices/2-4/power/runtime_suspended_time**
+    * `0`
+* **=> cat /sys/bus/usb/devices/2-4/power/control**
+    * `on`
+* **=> rmmod uas usb-storage**
+* **=> echo auto >/sys/bus/usb/devices/2-4/power/control**
+* **=> Wait few seconds...**
+* **=> cat /sys/bus/usb/devices/2-4/power/runtime_suspended_time**
+    * some non-zero value
+    * card reader still exists in `lsusb` output
+* **=> echo on >/sys/bus/usb/devices/2-4/power/control**
+    * *card reader missing*
