@@ -635,3 +635,9 @@ suspend.
     * card reader still exists in `lsusb` output
 * **=> echo on >/sys/bus/usb/devices/2-4/power/control**
     * *card reader missing*
+
+The same happens if both uas and usb-storage modules are blacklisted
+from the beginning. And everything works fine with USB 3.0 flash drive.
+
+It looks like Apple's card reader just breaks after changing the link
+state to U3.
