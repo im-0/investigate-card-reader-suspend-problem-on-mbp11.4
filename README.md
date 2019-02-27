@@ -744,3 +744,152 @@ Relevant parts of dmesg:
 [  104.740974] xhci_hcd 0000:00:14.0: Timeout while waiting for setup device command
 [  104.948910] usb 2-4: device not accepting address 2, error -62
 ```
+
+## Test 27 (FAIL)
+
+Trying out new patches with `autosuspend-loop`. This eventually ended
+up with the same error: `device not accepting address 2, error -62`.
+But now with traces.
+
+dmesg from normal suspend/resume cycle:
+
+```
+[  160.944069] usb usb2-port4: disabling link...
+[  160.944081] xhci_hcd 0000:00:14.0: Disable port 3
+[  160.944102] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x20280
+[  160.944104] xhci_hcd 0000:00:14.0: Get port status returned 0x10280
+[  160.944117] xhci_hcd 0000:00:14.0: Port Status Change Event for port 19
+[  160.944121] usb 2-4: Waited 0ms for LS_SS_DISABLED, status == 0
+[  160.944133] xhci_hcd 0000:00:14.0: handle_port_status: starting port polling.
+[  160.944145] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[  160.944161] xhci_hcd 0000:00:14.0: xhci_hub_status_data: stopping port polling.
+[  161.150291] usb 2-4: usb auto-suspend, wakeup 0
+[  162.456338] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x80
+[  162.456341] xhci_hcd 0000:00:14.0: Get port status returned 0x80
+[  162.456379] usb 2-4: usb auto-resume
+[  162.498383] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x80
+[  162.498388] xhci_hcd 0000:00:14.0: Get port status returned 0x80
+[  162.510345] usb 2-4: finish reset-resume
+[  162.510455] xhci_hcd 0000:00:14.0: Set up evaluate context for LPM MEL change.
+[  162.510498] xhci_hcd 0000:00:14.0: // Ding dong!
+[  162.510520] xhci_hcd 0000:00:14.0: Successful evaluate context command
+[  162.510530] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x80
+[  162.510532] xhci_hcd 0000:00:14.0: Get port status returned 0x80
+[  162.510560] xhci_hcd 0000:00:14.0: set port power, actual port 3 status  = 0x280
+[  162.614366] usb usb2-port4: enabling link...
+[  162.614379] xhci_hcd 0000:00:14.0: Enable port 3
+[  162.614422] xhci_hcd 0000:00:14.0: set port reset, actual port 3 status  = 0x2f0
+[  162.676377] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x2f0
+[  162.676380] xhci_hcd 0000:00:14.0: Get port status returned 0x2f0
+[  162.676408] usb usb2-port4: not reset yet, waiting 60ms
+[  162.738364] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x2f0
+[  162.738367] xhci_hcd 0000:00:14.0: Get port status returned 0x2f0
+[  162.738406] usb usb2-port4: not reset yet, waiting 200ms
+[  162.943418] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x2f0
+[  162.943421] xhci_hcd 0000:00:14.0: Get port status returned 0x2f0
+[  162.943454] usb usb2-port4: not reset yet, waiting 200ms
+[  163.090387] xhci_hcd 0000:00:14.0: Port Status Change Event for port 19
+[  163.090394] xhci_hcd 0000:00:14.0: handle_port_status: starting port polling.
+[  163.090457] hub 2-0:1.0: state 7 ports 6 chg 0000 evt 0010
+[  163.150382] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x221203
+[  163.150387] xhci_hcd 0000:00:14.0: Get port status returned 0x110203
+[  163.150442] xhci_hcd 0000:00:14.0: clear port reset change, actual port 3 status  = 0x21203
+[  163.150476] xhci_hcd 0000:00:14.0: clear port warm(BH) reset change, actual port 3 status  = 0x21203
+[  163.150507] xhci_hcd 0000:00:14.0: clear port link state change, actual port 3 status  = 0x21203
+[  163.150549] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x1203
+[  163.150585] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x1203
+[  163.150589] xhci_hcd 0000:00:14.0: Get port status returned 0x203
+[  163.203402] xhci_hcd 0000:00:14.0: Resetting device with slot ID 2
+[  163.203409] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.203578] xhci_hcd 0000:00:14.0: Completed reset device command.
+[  163.203597] xhci_hcd 0000:00:14.0: Successful reset device command.
+[  163.203656] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.203811] xhci_hcd 0000:00:14.0: Successful setup address command
+[  163.203821] xhci_hcd 0000:00:14.0: Op regs DCBAA ptr = 0x00000459c82000
+[  163.203830] xhci_hcd 0000:00:14.0: Slot ID 2 dcbaa entry @00000000ae70088a = 0x00000459f3e000
+[  163.203833] xhci_hcd 0000:00:14.0: Output Context DMA address = 0x459f3e000
+[  163.203837] xhci_hcd 0000:00:14.0: Internal device address = 0
+[  163.203842] usb 2-4: reset SuperSpeed Gen 1 USB device number 2 using xhci_hcd
+[  163.214393] xhci_hcd 0000:00:14.0: xhci_hub_status_data: stopping port polling.
+[  163.215994] usb 2-4: USB quirks for this device: 8000
+[  163.217107] xhci_hcd 0000:00:14.0: Waiting for status stage event
+[  163.217123] xhci_hcd 0000:00:14.0: xhci_drop_endpoint called for udev 00000000b5dec8fb
+[  163.217126] xhci_hcd 0000:00:14.0: xhci_drop_endpoint called for udev 00000000b5dec8fb
+[  163.217192] xhci_hcd 0000:00:14.0: add ep 0x81, slot id 2, new drop flags = 0x0, new add flags = 0x8
+[  163.217221] xhci_hcd 0000:00:14.0: add ep 0x2, slot id 2, new drop flags = 0x0, new add flags = 0x18
+[  163.217226] xhci_hcd 0000:00:14.0: xhci_check_bandwidth called for udev 00000000b5dec8fb
+[  163.217233] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.217466] xhci_hcd 0000:00:14.0: Successful Endpoint Configure command
+[  163.217638] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.217655] xhci_hcd 0000:00:14.0: Stopped on No-op or Link TRB for slot 2 ep 2
+[  163.217669] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.217897] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.217916] xhci_hcd 0000:00:14.0: Stopped on No-op or Link TRB for slot 2 ep 3
+[  163.217946] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.218359] xhci_hcd 0000:00:14.0: Set up evaluate context for LPM MEL change.
+[  163.218371] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.218395] xhci_hcd 0000:00:14.0: Successful evaluate context command
+[  163.218783] xhci_hcd 0000:00:14.0: Set up evaluate context for LPM MEL change.
+[  163.218790] xhci_hcd 0000:00:14.0: // Ding dong!
+[  163.218814] xhci_hcd 0000:00:14.0: Successful evaluate context command
+[  163.220678] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x1203
+[  163.220684] xhci_hcd 0000:00:14.0: Get port status returned 0x203
+```
+
+dmesg from bad suspend/resume cycle:
+
+```
+[  165.721135] usb usb2-port4: disabling link...
+[  165.721146] xhci_hcd 0000:00:14.0: Disable port 3
+[  165.721159] xhci_hcd 0000:00:14.0: Port Status Change Event for port 19
+[  165.721171] xhci_hcd 0000:00:14.0: handle_port_status: starting port polling.
+[  165.721187] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x20280
+[  165.721189] xhci_hcd 0000:00:14.0: Get port status returned 0x10280
+[  165.721195] usb 2-4: Waited 0ms for LS_SS_DISABLED, status == 0
+[  165.721205] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x280
+[  165.721225] hub 2-0:1.0: state 7 ports 6 chg 0000 evt 0010
+[  165.926418] usb 2-4: usb auto-suspend, wakeup 0
+[  165.938453] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x80
+[  165.938456] xhci_hcd 0000:00:14.0: Get port status returned 0x80
+[  165.966429] xhci_hcd 0000:00:14.0: xhci_hub_status_data: stopping port polling.
+[  167.240750] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x80
+[  167.240754] xhci_hcd 0000:00:14.0: Get port status returned 0x80
+[  167.240793] usb 2-4: usb auto-resume
+[  167.283438] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x80
+[  167.283446] xhci_hcd 0000:00:14.0: Get port status returned 0x80
+[  167.295437] usb 2-4: finish reset-resume
+[  167.295540] xhci_hcd 0000:00:14.0: Set up evaluate context for LPM MEL change.
+[  167.295572] xhci_hcd 0000:00:14.0: // Ding dong!
+[  167.295613] xhci_hcd 0000:00:14.0: Successful evaluate context command
+[  167.295637] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x80
+[  167.295644] xhci_hcd 0000:00:14.0: Get port status returned 0x80
+[  167.295692] xhci_hcd 0000:00:14.0: set port power, actual port 3 status  = 0x280
+[  167.304863] xhci_hcd 0000:00:14.0: Port Status Change Event for port 19
+[  167.304873] xhci_hcd 0000:00:14.0: handle_port_status: starting port polling.
+[  167.304917] hub 2-0:1.0: state 7 ports 6 chg 0000 evt 0010
+[  167.398446] usb usb2-port4: enabling link...
+[  167.398459] xhci_hcd 0000:00:14.0: Enable port 3
+[  167.398496] xhci_hcd 0000:00:14.0: set port reset, actual port 3 status  = 0x21311
+[  167.461456] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x221203
+[  167.461459] xhci_hcd 0000:00:14.0: Get port status returned 0x110203
+[  167.461494] xhci_hcd 0000:00:14.0: clear port reset change, actual port 3 status  = 0x21203
+[  167.461524] xhci_hcd 0000:00:14.0: clear port warm(BH) reset change, actual port 3 status  = 0x21203
+[  167.461563] xhci_hcd 0000:00:14.0: clear port link state change, actual port 3 status  = 0x21203
+[  167.461583] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x1203
+[  167.461602] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x1203
+[  167.461604] xhci_hcd 0000:00:14.0: Get port status returned 0x203
+[  167.462431] xhci_hcd 0000:00:14.0: xhci_hub_status_data: stopping port polling.
+[  167.514469] xhci_hcd 0000:00:14.0: Resetting device with slot ID 2
+[  167.514475] xhci_hcd 0000:00:14.0: // Ding dong!
+[  167.514654] xhci_hcd 0000:00:14.0: Completed reset device command.
+[  167.514670] xhci_hcd 0000:00:14.0: Successful reset device command.
+[  167.514724] xhci_hcd 0000:00:14.0: // Ding dong!
+[  172.766514] xhci_hcd 0000:00:14.0: Command timeout
+[  172.766517] xhci_hcd 0000:00:14.0: Abort command ring
+[  172.766561] xhci_hcd 0000:00:14.0: Timeout while waiting for setup device command
+[  172.974519] xhci_hcd 0000:00:14.0: // Ding dong!
+[  178.399653] xhci_hcd 0000:00:14.0: Command timeout
+[  178.399663] xhci_hcd 0000:00:14.0: Abort command ring
+[  178.399744] xhci_hcd 0000:00:14.0: Timeout while waiting for setup device command
+[  178.607655] usb 2-4: device not accepting address 2, error -62
+```

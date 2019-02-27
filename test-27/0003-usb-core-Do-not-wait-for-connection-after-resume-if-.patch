@@ -1,0 +1,40 @@
+From d979844145a672075f07147a11722fdf2095e6b5 Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Wed, 27 Feb 2019 03:26:43 +0500
+Subject: [PATCH 3/7] usb: core: Do not wait for connection after resume if
+ reset requested
+
+finish_port_resume->usb_reset_and_verify_device->hub_port_init
+->hub_port_reset->hub_port_wait_reset does this anyway.
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/hub.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 07d38bc26033..e9e02722b3a8 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -3004,7 +3004,8 @@ static int check_port_resume_type(struct usb_device *udev,
+ 			!port_is_power_on(hub, portstatus)) {
+ 		if (status >= 0)
+ 			status = -ENODEV;
+-	} else if (!(portstatus & USB_PORT_STAT_CONNECTION)) {
++	} else if (!(portstatus & USB_PORT_STAT_CONNECTION)
++			&& !udev->reset_resume) {
+ 		if (retries--) {
+ 			usleep_range(200, 300);
+ 			status = hub_port_status(hub, port1, &portstatus,
+@@ -3554,7 +3555,7 @@ int usb_port_resume(struct usb_device *udev, pm_message_t msg)
+ 		}
+ 	}
+ 
+-	if (udev->persist_enabled)
++	if (udev->persist_enabled && !udev->reset_resume)
+ 		status = wait_for_connected(status, udev, hub, port1,
+ 				&portchange, &portstatus);
+ 
+-- 
+2.20.1
+

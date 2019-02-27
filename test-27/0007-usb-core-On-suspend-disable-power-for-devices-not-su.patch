@@ -1,0 +1,83 @@
+From 0810afb7059a75265064ef63d137aea9763b19f9 Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Wed, 27 Feb 2019 15:32:24 +0500
+Subject: [PATCH 7/7] usb: core: On suspend, disable power for devices not
+ supporting U3
+
+This may help to decrease power consumption. Device is disconnected
+anyway (because we set link state to DISABLED instead of U3), so
+also disabling power on device's port can not make it any more broken.
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/hub.c | 26 +++++++++++++++++++++++++-
+ 1 file changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index f49c05ffe748..af564abe7925 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -2797,6 +2797,8 @@ static int hub_port_wait_reset(struct usb_hub *hub, int port1,
+ 	return 0;
+ }
+ 
++static int port_is_power_on(struct usb_hub *hub, unsigned portstatus);
++
+ /* Handle port reset and port warm(BH) reset (for USB3 protocol ports) */
+ static int hub_port_reset(struct usb_hub *hub, int port1,
+ 			struct usb_device *udev, unsigned int delay, bool warm)
+@@ -2830,6 +2832,12 @@ static int hub_port_reset(struct usb_hub *hub, int port1,
+ 	}
+ 	clear_bit(port1, hub->warm_reset_bits);
+ 
++	if (status == 0 && !port_is_power_on(hub, portstatus)) {
++		status = set_port_feature(hub->hdev, port1,
++				USB_PORT_FEAT_POWER);
++		msleep(hub_power_on_good_delay(hub));
++	}
++
+ 	if (status == 0 && hub_is_superspeed(hub->hdev) &&
+ 			(portstatus & USB_PORT_STAT_LINK_STATE) ==
+ 			USB_SS_PORT_LS_SS_DISABLED) {
+@@ -3013,7 +3021,8 @@ static int check_port_resume_type(struct usb_device *udev,
+ 	}
+ 	/* Is the device still present? */
+ 	else if (status || port_is_suspended(hub, portstatus) ||
+-			!port_is_power_on(hub, portstatus)) {
++			(!port_is_power_on(hub, portstatus) &&
++			!(udev->quirks & USB_QUIRK_NO_SS_LS_U3))) {
+ 		if (status >= 0)
+ 			status = -ENODEV;
+ 	} else if (!(portstatus & USB_PORT_STAT_CONNECTION)
+@@ -3226,6 +3235,12 @@ static int usb3_disable_link(struct usb_device *udev, struct usb_hub *hub)
+ 	usb_clear_port_feature(hub->hdev, port1,
+ 			USB_PORT_FEAT_C_CONNECTION);
+ 
++	if (status == 0) {
++		status = usb_clear_port_feature(hub->hdev, port1,
++				USB_PORT_FEAT_POWER);
++		msleep(2 * hub_power_on_good_delay(hub));
++	}
++
+ 	return status;
+ }
+ 
+@@ -3585,6 +3600,15 @@ int usb_port_resume(struct usb_device *udev, pm_message_t msg)
+ 				"can't get initial portstatus, status %d\n",
+ 				status);
+ 
++	if (status == 0 && !port_is_power_on(hub, portstatus) &&
++			!(udev->quirks & USB_QUIRK_NO_SS_LS_U3))
++		dev_warn(&port_dev->dev,
++				"unexpected: port not powered\n");
++	if (status == 0 && port_is_power_on(hub, portstatus) &&
++			(udev->quirks & USB_QUIRK_NO_SS_LS_U3))
++		dev_warn(&port_dev->dev,
++				"unexpected: port is powered\n");
++
+ 	if (status == 0 && hub_is_superspeed(hub->hdev)) {
+ 		if ((portstatus & USB_PORT_STAT_LINK_STATE) ==
+ 				USB_SS_PORT_LS_SS_DISABLED) {
+-- 
+2.20.1
+
