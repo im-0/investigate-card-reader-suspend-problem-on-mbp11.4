@@ -667,3 +667,9 @@ Same as Test 24, but without hub autosuspend.
     * card reader still exists in `lsusb` output
 * **=> echo on >/sys/bus/usb/devices/2-4/power/control**
     * *card reader missing*
+
+## Test 26 (FAIL)
+
+Trying to reproduce problem from Test 16 and Test 19 using device
+autosuspend. Reproduced successfully and much faster (less than 10
+minutes).

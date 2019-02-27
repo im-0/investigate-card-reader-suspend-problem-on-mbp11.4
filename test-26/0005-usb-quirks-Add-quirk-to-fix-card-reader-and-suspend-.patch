@@ -1,0 +1,34 @@
+From 99a55c6aadc696c4b9cf2b109ee1373f1aaf437c Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Tue, 12 Feb 2019 23:13:31 +0500
+Subject: [PATCH 5/5] usb: quirks: Add quirk to fix card reader and suspend on
+ MacBooks
+
+This enables USB_QUIRK_NO_SS_LS_U3 for the embedded SD card
+reader used in Apple MacBook laptops.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=111201
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=202509
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/quirks.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/usb/core/quirks.c b/drivers/usb/core/quirks.c
+index 6c638220bc30..d03dd7393567 100644
+--- a/drivers/usb/core/quirks.c
++++ b/drivers/usb/core/quirks.c
+@@ -310,6 +310,10 @@ static const struct usb_device_id usb_quirk_list[] = {
+ 	/* appletouch */
+ 	{ USB_DEVICE(0x05ac, 0x021a), .driver_info = USB_QUIRK_RESET_RESUME },
+ 
++	/* Apple Card Reader */
++	{ USB_DEVICE(0x05ac, 0x8406), .driver_info =
++			USB_QUIRK_RESET_RESUME | USB_QUIRK_NO_SS_LS_U3 },
++
+ 	/* Genesys Logic hub, internally used by KY-688 USB 3.1 Type-C Hub */
+ 	{ USB_DEVICE(0x05e3, 0x0612), .driver_info = USB_QUIRK_NO_LPM },
+ 
+-- 
+2.20.1
+

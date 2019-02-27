@@ -1,0 +1,29 @@
+From 7d083ad56c30b3db0e46d733f03c5be28d950f82 Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Wed, 27 Feb 2019 02:42:42 +0500
+Subject: [PATCH 2/5] usb: core: Do not wait in wait_for_connected() after
+ error
+
+This adds presumably forgotten check for previous return values.
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/hub.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index d85ee1a63656..8a000973c98d 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -3554,7 +3554,7 @@ int usb_port_resume(struct usb_device *udev, pm_message_t msg)
+ 	}
+ 
+ 	if (udev->persist_enabled)
+-		status = wait_for_connected(0, udev, hub, port1,
++		status = wait_for_connected(status, udev, hub, port1,
+ 				&portchange, &portstatus);
+ 
+ 	status = check_port_resume_type(udev,
+-- 
+2.20.1
+
