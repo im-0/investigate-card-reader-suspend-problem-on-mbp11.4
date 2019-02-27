@@ -29,6 +29,12 @@ check_dev()
 	lsusb -d "${vid}:${pid}"
 }
 
+if [ $# -gt 0 ]; then
+	oneshot="${1}"
+else
+	oneshot=""
+fi
+
 # Disable hub autosuspend.
 set_on "${HUB}"
 
@@ -46,4 +52,6 @@ while true; do
 	sleep 1
 
 	check_dev
+
+	[ "${oneshot}" = "oneshot" ] && break
 done
