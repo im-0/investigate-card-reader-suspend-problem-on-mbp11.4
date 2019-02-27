@@ -673,3 +673,74 @@ Same as Test 24, but without hub autosuspend.
 Trying to reproduce problem from Test 16 and Test 19 using device
 autosuspend. Reproduced successfully and much faster (less than 10
 minutes).
+
+This happens even faster if other USB-related activity happens during
+the device resume. Continuously moving cursor using touchpad is enough.
+
+Relevant parts of dmesg:
+
+```
+[   83.401198] usb usb2-port4: enabling link...
+[   83.401211] xhci_hcd 0000:00:14.0: Enable port 3
+[   83.401250] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x2a0
+[   83.401253] xhci_hcd 0000:00:14.0: Get port status returned 0x2a0
+[   83.401276] usb 2-4: Waited 0ms for !LS_SS_DISABLED, status == 0
+[   83.401279] usb 2-4: finish reset-resume
+[   83.410404] xhci_hcd 0000:00:14.0: Port Status Change Event for port 19
+[   83.410414] xhci_hcd 0000:00:14.0: handle_port_status: starting port polling.
+[   83.410436] hub 2-0:1.0: state 7 ports 6 chg 0000 evt 0010
+[   88.869292] xhci_hcd 0000:00:14.0: Cancel URB 000000005abf9045, dev 4, ep 0x0, starting at offset 0x459cf0cf0
+[   88.869299] xhci_hcd 0000:00:14.0: // Ding dong!
+[   88.869315] xhci_hcd 0000:00:14.0: Stopped on Transfer TRB for slot 2 ep 0
+[   88.869322] xhci_hcd 0000:00:14.0: Removing canceled TD starting at 0x459cf0cf0 (dma).
+[   88.869326] xhci_hcd 0000:00:14.0: Finding endpoint context
+[   88.869328] xhci_hcd 0000:00:14.0: Cycle state = 0x1
+[   88.869330] xhci_hcd 0000:00:14.0: New dequeue segment = 000000003b52395e (virtual)
+[   88.869333] xhci_hcd 0000:00:14.0: New dequeue pointer = 0x459cf0d10 (DMA)
+[   88.869336] xhci_hcd 0000:00:14.0: Set TR Deq Ptr cmd, new deq seg = 000000003b52395e (0x459cf0000 dma), new deq ptr = 000000000e061ffb (0x459cf0d10 dma), new cycle = 1
+[   88.869340] xhci_hcd 0000:00:14.0: // Ding dong!
+[   88.869358] usb 2-4: autosuspend-loo timed out on ep0out len=0/0
+[   88.869359] xhci_hcd 0000:00:14.0: Successful Set TR Deq Ptr cmd, deq = @459cf0d10
+[   88.869365] usb 2-4: Disable of device-initiated U1 failed.
+[   93.988482] xhci_hcd 0000:00:14.0: Cancel URB 0000000050ae4319, dev 4, ep 0x0, starting at offset 0x459cf0d10
+[   93.988489] xhci_hcd 0000:00:14.0: // Ding dong!
+[   93.988523] xhci_hcd 0000:00:14.0: Stopped on Transfer TRB for slot 2 ep 0
+[   93.988530] xhci_hcd 0000:00:14.0: Removing canceled TD starting at 0x459cf0d10 (dma).
+[   93.988533] xhci_hcd 0000:00:14.0: Finding endpoint context
+[   93.988535] xhci_hcd 0000:00:14.0: Cycle state = 0x1
+[   93.988538] xhci_hcd 0000:00:14.0: New dequeue segment = 000000003b52395e (virtual)
+[   93.988540] xhci_hcd 0000:00:14.0: New dequeue pointer = 0x459cf0d30 (DMA)
+[   93.988543] xhci_hcd 0000:00:14.0: Set TR Deq Ptr cmd, new deq seg = 000000003b52395e (0x459cf0000 dma), new deq ptr = 0000000095c1d9f2 (0x459cf0d30 dma), new cycle = 1
+[   93.988546] xhci_hcd 0000:00:14.0: // Ding dong!
+[   93.988561] xhci_hcd 0000:00:14.0: Successful Set TR Deq Ptr cmd, deq = @459cf0d30
+[   93.988569] usb 2-4: autosuspend-loo timed out on ep0out len=0/0
+[   93.988572] usb 2-4: Disable of device-initiated U2 failed.
+[   93.988575] xhci_hcd 0000:00:14.0: Set up evaluate context for LPM MEL change.
+[   93.988579] xhci_hcd 0000:00:14.0: // Ding dong!
+[   93.988600] xhci_hcd 0000:00:14.0: Successful evaluate context command
+[   93.988608] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x21203
+[   93.988609] xhci_hcd 0000:00:14.0: Get port status returned 0x10203
+[   93.988634] xhci_hcd 0000:00:14.0: set port reset, actual port 3 status  = 0x21311
+[   94.050490] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x221203
+[   94.050492] xhci_hcd 0000:00:14.0: Get port status returned 0x110203
+[   94.050522] xhci_hcd 0000:00:14.0: clear port reset change, actual port 3 status  = 0x21203
+[   94.050544] xhci_hcd 0000:00:14.0: clear port warm(BH) reset change, actual port 3 status  = 0x21203
+[   94.050566] xhci_hcd 0000:00:14.0: clear port link state change, actual port 3 status  = 0x21203
+[   94.050584] xhci_hcd 0000:00:14.0: clear port connect change, actual port 3 status  = 0x1203
+[   94.050597] xhci_hcd 0000:00:14.0: get port status, actual port 3 status  = 0x1203
+[   94.050599] xhci_hcd 0000:00:14.0: Get port status returned 0x203
+[   94.103486] xhci_hcd 0000:00:14.0: Resetting device with slot ID 2
+[   94.103492] xhci_hcd 0000:00:14.0: // Ding dong!
+[   94.103629] xhci_hcd 0000:00:14.0: Completed reset device command.
+[   94.103641] xhci_hcd 0000:00:14.0: Successful reset device command.
+[   94.103683] xhci_hcd 0000:00:14.0: // Ding dong!
+[   94.285475] xhci_hcd 0000:00:14.0: xhci_hub_status_data: stopping port polling.
+[   99.109726] xhci_hcd 0000:00:14.0: Command timeout
+[   99.109729] xhci_hcd 0000:00:14.0: Abort command ring
+[   99.109758] xhci_hcd 0000:00:14.0: Timeout while waiting for setup device command
+[   99.316718] xhci_hcd 0000:00:14.0: // Ding dong!
+[  104.740921] xhci_hcd 0000:00:14.0: Command timeout
+[  104.740927] xhci_hcd 0000:00:14.0: Abort command ring
+[  104.740974] xhci_hcd 0000:00:14.0: Timeout while waiting for setup device command
+[  104.948910] usb 2-4: device not accepting address 2, error -62
+```
