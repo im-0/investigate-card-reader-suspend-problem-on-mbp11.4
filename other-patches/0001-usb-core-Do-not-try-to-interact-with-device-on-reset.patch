@@ -1,0 +1,32 @@
+From d5ba0562543654789cfc79c20a73dfff5b7cad31 Mon Sep 17 00:00:00 2001
+From: Ivan Mironov <mironov.ivan@gmail.com>
+Date: Wed, 27 Feb 2019 09:15:17 +0500
+Subject: [PATCH] usb: core: Do not try to interact with device on reset_resume
+
+usb_reset_and_verify_device->usb_unlocked_disable_lpm->usb_disable_lpm
+->usb_disable_link_state->usb_set_device_initiated_lpm tries to send
+control transfers to device. There is not much sense in doig this
+just before resetting the same device.
+
+Signed-off-by: Ivan Mironov <mironov.ivan@gmail.com>
+---
+ drivers/usb/core/hub.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 9e5e14882566..fdb54cb6d804 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -4177,7 +4177,8 @@ static int usb_disable_link_state(struct usb_hcd *hcd, struct usb_device *udev,
+ 	if (usb_set_lpm_timeout(udev, state, 0))
+ 		return -EBUSY;
+ 
+-	usb_set_device_initiated_lpm(udev, state, false);
++	if (!udev->reset_resume)
++		usb_set_device_initiated_lpm(udev, state, false);
+ 
+ 	if (hcd->driver->disable_usb3_lpm_timeout(hcd, udev, state))
+ 		dev_warn(&udev->dev, "Could not disable xHCI %s timeout, "
+-- 
+2.20.1
+
