@@ -1,0 +1,49 @@
+#!/bin/sh -xeu
+
+HUB="/sys/bus/usb/devices/usb2"
+DEV="/sys/bus/usb/devices/2-4"
+
+# Unload modules that could prevent device autosuspend.
+rmmod uas usb-storage || true
+
+get_suspended_time()
+{
+	cat "${1}/power/runtime_suspended_time"
+}
+
+set_on()
+{
+	echo "on" >"${1}/power/control"
+}
+
+set_auto()
+{
+	echo "auto" >"${1}/power/control"
+}
+
+vid=$( cat "${DEV}/idVendor" )
+pid=$( cat "${DEV}/idProduct" )
+
+check_dev()
+{
+	lsusb -d "${vid}:${pid}"
+}
+
+# Disable hub autosuspend.
+set_on "${HUB}"
+
+while true; do
+	prev_time=$( get_suspended_time "${DEV}" )
+	set_auto "${DEV}"
+
+	while sleep 1; do
+		new_time=$( get_suspended_time "${DEV}" )
+		[ $new_time -ne $prev_time ] && break
+	done
+	sleep 1
+
+	set_on "${DEV}"
+	sleep 1
+
+	check_dev
+done
